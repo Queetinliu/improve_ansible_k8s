@@ -1,0 +1,4 @@
+rolename: admin
+hosts_list: ''  
+cn: admin
+orga: system:masters

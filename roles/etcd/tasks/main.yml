@@ -1,0 +1,33 @@
+- name: create directory
+  file:
+    path: /opt/etcd/{{ item }}
+    state: directory
+  with_items:
+    - bin
+    - cert
+    - data
+    - wal
+- name: copy etcdctl bin
+  copy:
+    src: roles/etcd/files/{{ item }}
+    dest: /opt/etcd/bin/{{ item }}
+    mode: '0755'
+  with_items:
+    - etcd
+    - etcdctl
+- name: copy cert file
+  copy:
+    src: roles/cert/output/{{ item }}
+    dest: /opt/etcd/cert/{{ item }}
+  with_items:
+    - "{{ rolename }}.pem"
+    - "{{ rolename }}-key.pem"
+    - ca.pem
+- name: generate etcd service
+  template:
+    src: roles/etcd/templates/etcd.service.j2
+    dest: /etc/systemd/system/etcd.service
+  #notify:
+  #  - restart service
+#- include_tasks: restartservice.yml
+- include_tasks: ensurerunning.yml

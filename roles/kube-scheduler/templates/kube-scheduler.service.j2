@@ -1,0 +1,29 @@
+[Unit]
+Description=Kubernetes Scheduler
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+[Service]
+WorkingDirectory={{ k8s_dir }}/kube-scheduler
+ExecStart=/opt/k8s/bin/kube-scheduler \
+  --config=/opt/k8s/cfg/kube-scheduler.yaml \
+  --bind-address=127.0.0.1 \
+  --secure-port=10259 \
+  --port=0 \
+  --tls-cert-file=/opt/k8s/cert/kube-scheduler.pem \
+  --tls-private-key-file=/opt/k8s/cert/kube-scheduler-key.pem \
+  --authentication-kubeconfig=/opt/k8s/cfg/kube-scheduler.kubeconfig \
+  --client-ca-file=/opt/k8s/cert/ca.pem \
+  --requestheader-allowed-names="" \
+  --requestheader-client-ca-file=/opt/k8s/cert/ca.pem \
+  --requestheader-extra-headers-prefix="X-Remote-Extra-" \
+  --requestheader-group-headers=X-Remote-Group \
+  --requestheader-username-headers=X-Remote-User \
+  --authorization-kubeconfig=/opt/k8s/cfg/kube-scheduler.kubeconfig \
+  --logtostderr=true \
+  --v=2
+Restart=always
+RestartSec=5
+StartLimitInterval=0
+
+[Install]
+WantedBy=multi-user.target

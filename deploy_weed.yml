@@ -1,0 +1,14 @@
+- hosts: weedmasters
+  gather_facts: false
+  roles:
+    - weedmaster
+
+- hosts: weedvolumes
+  gather_facts: false
+  roles:
+    - weedvolume
+
+- hosts: weedfilers
+  gather_facts: false
+  roles:
+    - weedfiler

@@ -1,0 +1,8 @@
+- include_tasks: roles/master/tasks/mastercommon.yml
+#- name: generate kube-controller-manager service file
+#  template:
+#    src: templates/kube-controller-manager.service.j2
+#    dest: /usr/lib/systemd/system/kube-controller-manager.service
+#  notify:
+#    - restart {{ servicename }}
+

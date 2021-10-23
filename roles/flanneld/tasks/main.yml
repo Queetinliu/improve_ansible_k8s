@@ -1,0 +1,65 @@
+- name: make dir
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /opt/k8s/flanneld/bin
+    - /opt/k8s/flanneld/cert
+    - /opt/k8s/flanneld/cfg
+    - /etc/cni/net.d
+    - /run/flannel
+    - /etc/kube-flannel/
+
+- name: copy flanneld bin
+  copy:
+    src: ../files/{{ item }}
+    dest: /opt/k8s/flanneld/bin/{{ item }}
+    mode: '0755'
+  with_items:
+    - flanneld  
+
+- name: mkdir dir for cniplugins
+  file:
+    path: /opt/cniplugins
+    state: directory
+
+- name: mkdir bin dir for cniplugins
+  file:
+    path: /opt/cniplugins/bin
+    state: directory
+
+- name: copy cniplugins 
+  copy:
+    src: ../files/cni-plugins-linux-amd64-v0.9.1.tgz
+    dest: /opt/cniplugins/cni-plugins-linux-amd64-v0.9.1.tgz
+
+- name: tar cniplugins bin
+  unarchive:
+    src: /opt/cniplugins/cni-plugins-linux-amd64-v0.9.1.tgz
+    dest: /opt/cniplugins/bin
+
+- name: generate flanneld kubeconfig
+  script: files/flannelkubeconfig.sh {{ kube_apiserver }}
+  args:
+    executable: /bin/bash
+  connection: local
+  run_once: true
+    
+- name: copy flanneld.kubeconfig
+  copy:
+    src: /opt/k8s/flanneld/cfg/flanneld.kubeconfig
+    dest: /opt/k8s/flanneld/cfg/flanneld.kubeconfig
+    mode: '600'
+
+
+- name: generate flanneld service and other config
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}/{{ item.src.split('.')[:-1]|join('.') }}"
+    mode: '644'
+  with_items:
+    - { src: 'flanneld.service.j2', dest: '/etc/systemd/system' }
+    - { src: '10-flannel.conflist.j2', dest: '/etc/cni/net.d' }
+    - { src: 'net-conf.json.j2', dest: '/etc/kube-flannel' }    
+ 
+- include_tasks: ensurerunning.yml

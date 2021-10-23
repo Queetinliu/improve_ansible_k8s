@@ -1,0 +1,52 @@
+[Unit]
+Description=Kubernetes API Server
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=network.target
+
+[Service]
+WorkingDirectory={{ k8s_dir }}/kube-apiserver
+ExecStart=/opt/k8s/bin/kube-apiserver \
+--logtostderr=true \
+--v=2 \
+--runtime-config=api/all=true \
+--etcd-servers={{ etcd_endpoints }} \
+--bind-address={{ nodeip }} \
+--insecure-port=0 \
+--secure-port=6443 \
+--advertise-address={{ nodeip }} \
+--allow-privileged=true \
+--service-cluster-ip-range={{  service_cidr }} \
+--enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota,NodeRestriction,MutatingAdmissionWebhook,ValidatingAdmissionWebhook \
+--authorization-mode=RBAC,Node \
+--enable-bootstrap-token-auth=true \
+--client-ca-file=/opt/k8s/cert/ca.pem \
+--token-auth-file=/opt/k8s/cfg/token.csv \
+--service-node-port-range={{ node_port_range }} \
+--kubelet-client-certificate=/opt/k8s/cert/{{ rolename }}.pem \
+--kubelet-client-key=/opt/k8s/cert/{{ rolename }}-key.pem \
+--tls-cert-file=/opt/k8s/cert/{{ rolename }}.pem  \
+--tls-private-key-file=/opt/k8s/cert/{{ rolename }}-key.pem \
+--service-account-key-file=/opt/k8s/cert/ca-key.pem \
+--etcd-cafile=/opt/k8s/cert/ca.pem \
+--etcd-certfile=/opt/k8s/cert/{{ rolename }}.pem \
+--etcd-keyfile=/opt/k8s/cert/{{ rolename }}-key.pem \
+--requestheader-allowed-names=aggregator \
+--requestheader-client-ca-file=/opt/k8s/cert/ca.pem \
+--requestheader-extra-headers-prefix=X-Remote-Extra- \
+--requestheader-group-headers=X-Remote-Group \
+--requestheader-username-headers=X-Remote-User \
+--enable-aggregator-routing=true \
+--proxy-client-cert-file=/opt/k8s/cert/proxy-client.pem \
+--proxy-client-key-file=/opt/k8s/cert/proxy-client-key.pem \
+--audit-log-maxage=30 \
+--audit-log-maxbackup=3 \
+--audit-log-maxsize=100 \
+--audit-log-path=/opt/k8s/logs/k8s-audit.log"
+
+Restart=on-failure
+RestartSec=10
+Type=notify
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

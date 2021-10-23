@@ -1,0 +1,9 @@
+{
+  "registry-mirrors": ["https://mirror.baidubce.com",
+                       "https://hub-mirror.c.163.com",
+                        "https://mirror.gcr.io"
+                        ],
+"insecure-registries": ["http://k8shub.com:1180"]
+
+}
+

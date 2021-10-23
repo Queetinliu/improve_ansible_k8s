@@ -1,0 +1,70 @@
+- hosts: workers
+  gather_facts: false
+  roles:
+    - httprepo
+  tags: 
+    - never
+    - httprepo
+    - common
+
+- hosts: workers
+  gather_facts: false
+  roles:
+    - common
+  tags: 
+    - never
+    - common
+
+- hosts: localhost
+  gather_facts: false
+  roles:
+    - cert
+  tags: 
+    - never
+    - cert
+
+- hosts: etcd
+  gather_facts: false
+  roles:
+    - etcd
+#  tags: never
+
+- hosts: masters
+  gather_facts: false
+  roles:
+    - master
+
+- hosts: workers
+  gather_facts: false
+  roles:
+    - worker  
+
+- hosts: workers
+  gather_facts: false
+  roles:
+    - loadimages
+  tags: 
+    - loadimages
+
+- hosts: masters
+  gather_facts: false
+  roles:
+    - nfsstorageclass
+  tags:
+    - nfsstorageclass
+   
+- hosts: masters
+  gather_facts: false
+  tasks:
+    - include_role: 
+        name: registry
+      when: "{{ groups['workers'] | length >= 2 }}"
+  tags: registry
+
+- hosts: masters
+  gather_facts: false
+  roles:
+    - addons
+  tags:
+    #- never
+    - addons 

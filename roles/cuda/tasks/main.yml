@@ -1,0 +1,62 @@
+#- name: remove kernel tools
+#  yum:
+#    name: kernel-tools-3.10.0
+#    state: absent
+#  tags:
+#    - upgrade kernel
+#    - never
+#
+#- name: install new kernel
+#  yum:
+#    name: kernel-lt-4.4.138
+#    state: present
+#  tags:
+#    - upgrade kernel
+#    - never
+#
+#- name: set to new kernel
+#  shell: grub2-set-default 0
+#  tags:
+#    - upgrade kernel
+#    - never
+
+- name: install kernel-devel and kernel-headers
+  yum:
+    name: ['kernel-lt-devel',' kernel-lt-headers']
+    state: present
+
+- name: install compile rpms
+  yum:
+    name: ['make','automake','gcc','gcc-c++']
+    state: present
+
+- name: disable nouveau
+  copy:
+    src: ../files/blacklist-nouveau.conf
+    dest: /etc/modprobe.d/blacklist-nouveau.conf
+  notify:
+    - regenerate kernel
+
+- name: copy cuda run file to host
+  copy: 
+    src: "../files/{{ runfile }}"
+    dest: "/opt/{{ runfile }}"
+
+- name: install cuda run file
+  shell: rmmod nouveau && sh {{ runfile }} --silent --toolkit
+  args:
+    chdir: /opt
+    creates: /usr/local/cuda/bin/nvcc
+
+- name: copy cuda bin environment
+  copy:
+    src: ../files/cuda.sh
+    dest: /etc/profile.d/cuda.sh
+
+- name: copy cuda library environment
+  copy:
+    src: ../files/cuda-10.0.conf
+    dest: /etc/ld.so.conf.d/cuda-10.0.conf
+  notify:
+    - reload library
+  

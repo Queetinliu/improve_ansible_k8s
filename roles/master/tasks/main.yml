@@ -1,0 +1,28 @@
+- name: make directory
+  file:
+    path: /opt/k8s/{{ item }}
+    state: directory
+  with_items:
+    - bin
+    - cfg
+    - data
+    - cert
+    - logs
+- name: copy ca cert
+  copy:
+    src: roles/cert/output/{{ item }}
+    dest: /opt/k8s/cert/{{ item }}
+  with_items:
+    - ca.pem
+    - ca-key.pem
+- include_role:
+    name: kubectl
+- include_role:
+    name: kube-apiserver
+- include_role:
+   name: kube-controller-manager
+- include_role:
+    name: kube-scheduler
+- include_role:
+    name: kube-nginx
+  when: "{{ groups['masters'] | length >= 3 }}" 

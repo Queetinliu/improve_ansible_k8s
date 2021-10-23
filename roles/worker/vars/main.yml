@@ -1,0 +1,4 @@
+k8s_dir: /opt/k8s
+#kube_apiserver: https://127.0.0.1:8443
+cluster_cidr: 10.66.0.0/16
+token: 5774593de3382190223132e38d48a1e2

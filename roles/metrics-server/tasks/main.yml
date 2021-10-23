@@ -1,0 +1,13 @@
+- name: copy components.yaml
+  copy:
+    src: ../files/components.yaml
+    dest: /opt/k8s/cfg/components.yaml
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"
+ 
+- name: deploy metrics-server
+  shell: kubectl apply -f components.yaml
+  args:
+    chdir: /opt/k8s/cfg/
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"

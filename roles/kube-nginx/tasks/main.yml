@@ -1,0 +1,53 @@
+- name: make nginx directory
+  file:
+    path: /opt/k8s/kube-nginx/{{ item }}
+    state: directory 
+  with_items:
+    - nginx-prefix
+    - conf
+    - logs
+    - sbin 
+
+- name: copy nginx tar.gz file
+  copy:
+    src: ../files/nginx-1.15.3.tar.gz
+    dest: /opt/k8s/kube-nginx/nginx-1.15.3.tar.gz
+
+- name: install make gcc 
+  yum:
+    name: ['gcc','make']
+    state: present
+- name: uncompress nginx tar
+  command: tar -xzf nginx-1.15.3.tar.gz
+  args:
+    chdir: /opt/k8s/kube-nginx
+    creates: /opt/k8s/kube-nginx/nginx-1.15.3/configure
+
+- name: compile nginx
+  command: "{{ item }}"
+  loop:
+    - ./configure --with-stream --without-http --prefix=/opt/k8s/kube-nginx/nginx-prefix --without-http_uwsgi_module --without-http_scgi_module --without-http_fastcgi_module
+    - make
+    - make install
+  args: 
+    chdir: /opt/k8s/kube-nginx/nginx-1.15.3     
+    creates: /opt/k8s/kube-nginx/nginx-prefix/sbin/nginx
+
+- name: copy nginx bin
+  copy: 
+    src: /opt/k8s/kube-nginx/nginx-prefix/sbin/nginx
+    dest: /opt/k8s/kube-nginx/sbin/kube-nginx
+    mode: '0755'
+    remote_src: true
+- name: generate config file
+  template:
+    src: ../templates/kube-nginx.conf.j2
+    dest: /opt/k8s/kube-nginx/conf/kube-nginx.conf
+- name: generate kube-nginx service file
+  template:
+    src: ../templates/kube-nginx.service.j2
+    dest: /etc/systemd/system/kube-nginx.service
+  #notify:
+  #  - restart service
+#- include_tasks: restartservice.yml
+- include_tasks: ensurerunning.yml

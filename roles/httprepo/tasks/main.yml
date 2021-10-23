@@ -1,0 +1,25 @@
+- name: test if connect to internet
+  shell: ping -c 4 -q baidu.com >& /dev/null
+  ignore_errors: true
+  register: internet
+
+- name: Ansible delete file glob
+  find:
+    paths: /etc/yum.repos.d/
+    patterns: '*.repo'
+  register: files_to_delete
+  when: internet.rc != 0
+
+- name: Ansible remove file glob
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ files_to_delete.files }}"
+  when: internet.rc != 0
+
+- name: copy httprepo file
+  template:
+    src: ../templates/httplocal.repo.j2
+    dest: /etc/yum.repos.d/httplocal.repo
+  notify:
+    - clean cache

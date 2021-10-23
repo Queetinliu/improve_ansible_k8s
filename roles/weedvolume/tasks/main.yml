@@ -1,0 +1,7 @@
+- name: mkdir volume dir
+  file:
+    path: "{{ volumedir }}"
+    state: directory
+
+- include_role:
+    name: seaweedfs

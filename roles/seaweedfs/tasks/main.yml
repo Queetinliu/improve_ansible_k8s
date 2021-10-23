@@ -1,0 +1,18 @@
+- name: mkdir work dir
+  file:
+    path: /opt/weed
+    state: directory
+
+- name: copy weed binary
+  copy:
+    src: ../files/weed
+    dest: /usr/local/bin/weed
+    mode: '0755'
+
+- name: generate {{ servicename }} service
+  template:
+    src: ../../{{ rolename }}/templates/{{ servicename }}.service.j2
+    dest: /etc/systemd/system/{{ servicename }}.service 
+
+- include_tasks: ensurerunning.yml
+

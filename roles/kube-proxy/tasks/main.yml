@@ -1,0 +1,133 @@
+- name: make kube-proxy dir
+  file:
+    path: /opt/k8s/kube-proxy
+    state: directory
+
+- name: make dir under kube-proxy
+  file:
+    path: /opt/k8s/kube-proxy/{{ item }}
+    state: directory
+  with_items:
+    - bin
+    - cert
+    - cfg
+    - logs
+
+- name: copy kube-proxy bin
+  copy:
+    src: ../files/kube-proxy
+    dest: /opt/k8s/kube-proxy/bin/kube-proxy
+    mode: '0755'
+
+- name: copy cert file
+  copy:
+    src: roles/cert/output/{{ item }}
+    dest: /opt/k8s/kube-proxy/cert/{{ item }}
+  with_items:
+    - "{{ rolename }}.pem"
+    - "{{ rolename }}-key.pem"
+
+- name: check if kube-nginx running
+  stat:
+    path: /etc/systemd/system/kube-nginx.service
+  register: kube_nginx_stats
+
+
+- name: define kube-apiserver for kube-proxy with kube-nginx install 
+  set_fact:
+    kube_apiserver: https://127.0.0.1:8443
+  when: kube_nginx_stats.stat.exists
+
+- name: define kube-apiserver for kube-proxy on alone worker node
+  set_fact:
+    kube_apiserver: "https://{{ hostvars[groups['masters'][0]].ansible_ssh_host }}:8443"
+  when: not kube_nginx_stats.stat.exists and  groups['masters'] | length >=3
+
+- name: check if kubectl exists
+  stat:
+    path: /usr/bin/kubectl
+  register: kubectl_stats
+
+- name: generate kube-proxy kubeconfig controller node
+  shell: "{{ item }}"
+  loop:
+    - 'kubectl config set-cluster kubernetes --certificate-authority=/opt/k8s/cert/ca.pem --embed-certs=true  --server="{{ kube_apiserver }}"   --kubeconfig=kube-proxy.kubeconfig'
+    - kubectl config set-credentials kube-proxy  --client-certificate=/opt/k8s/kube-proxy/cert/kube-proxy.pem --client-key=/opt/k8s/kube-proxy/cert/kube-proxy-key.pem --embed-certs=true --kubeconfig=kube-proxy.kubeconfig
+    - kubectl config set-context default --cluster=kubernetes --user=kube-proxy --kubeconfig=kube-proxy.kubeconfig
+    - kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
+  args:
+    chdir: /opt/k8s/kube-proxy/cfg/
+    #creates: /opt/k8s/kube-proxy/cfg/kube-proxy.kubeconfig
+  when: kubectl_stats.stat.exists
+
+- name: generate kube-proxy kubeconfig worker node
+  shell: "{{ item }}"
+  loop:
+    - 'kubectl config set-cluster kubernetes --certificate-authority=/opt/k8s/cert/ca.pem --embed-certs=true  --server="{{ kube_apiserver }}"   --kubeconfig=kube-proxy.kubeconfig'
+    - kubectl config set-credentials kube-proxy  --client-certificate=/opt/k8s/kube-proxy/cert/kube-proxy.pem --client-key=/opt/k8s/kube-proxy/cert/kube-proxy-key.pem --embed-certs=true --kubeconfig=kube-proxy.kubeconfig
+    - kubectl config set-context default --cluster=kubernetes --user=kube-proxy --kubeconfig=kube-proxy.kubeconfig
+    - kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
+  args:
+    chdir: /opt/k8s/cfg/
+    #creates: /opt/k8s/kube-proxy/cfg/kube-proxy.kubeconfig
+  when: not kubectl_stats.stat.exists
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: check if kube-proxy exists
+  stat:
+    path: /opt/k8s/cfg/kube-proxy.kubeconfig
+  register: kube_proxy
+
+- name: fetch kube-proxy.kubeconfig to ansible master
+  fetch:
+    src: /opt/k8s/cfg/kube-proxy.kubeconfig
+    dest: /tmp/kube-proxy.kubeconfig
+    flat: yes
+  delegate_to: "{{ groups['masters'][0] }}"
+  when: kube_proxy.stat.exists
+
+- name: copy kubelet-bootstrap.kubeconfig on worker node
+  copy:
+    src: /tmp/kube-proxy.kubeconfig
+    dest: /opt/k8s/kube-proxy/cfg/kube-proxy.kubeconfig
+  when: not kubectl_stats.stat.exists
+
+- name: generate kube-proxy-config.yaml
+  template:
+    src: ../templates/kube-proxy-config.yaml.j2
+    dest: /opt/k8s/kube-proxy/cfg/kube-proxy-config.yaml
+
+- name: test if connect to internet
+  shell: ping -c 4 -q baidu.com >& /dev/null
+  ignore_errors: true
+  register: internet
+
+- name: yum install epel-release
+  yum:
+    name: epel-release
+    state: present
+  when: internet.rc == 0
+
+- name: yum install ipvs
+  yum:
+    name: ['ipvsadm','conntrack-tools']
+    state: present
+
+- name: mode ipvs
+  shell: "{{ item }}"
+  loop: 
+    - modprobe ip_vs_rr
+    - touch ipvs
+  args:
+    chdir: /opt/k8s/kube-proxy  
+    creates: /opt/k8s/kube-proxy/ipvs   
+ 
+- name: generate kube-proxy service
+  template: 
+    src: ../templates/kube-proxy.service.j2
+    dest: /etc/systemd/system/kube-proxy.service
+  #notify:
+  #  - restart service
+#- include_tasks: restartservice.yml
+- include_tasks: ensurerunning.yml
+  

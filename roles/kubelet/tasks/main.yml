@@ -1,0 +1,172 @@
+- name: make kubelet directory
+  file:
+    path: /opt/k8s/kubelet
+    state: directory
+
+- name: make cert cfg more dir
+  file:
+    path: /opt/k8s/kubelet/{{ item }}
+    state: directory
+  with_items:
+    - bin
+    - cfg
+    - logs
+
+- name: make volume dir
+  file:
+    path: /opt/k8s/kubelet/kubelet-plugins/volume/exec/
+    state: directory
+
+- name: copy kubelet file
+  copy: 
+    src: ../files/kubelet
+    dest: /opt/k8s/kubelet/bin/kubelet
+    mode: '0755'
+
+- name: check if kube-nginx running
+  stat:
+    path: /etc/systemd/system/kube-nginx.service
+  register: kube_nginx_stats
+
+- name: define kube-apiserver for kubelet with kube-nginx on it
+  set_fact:
+    kube_apiserver: https://127.0.0.1:8443
+  when: kube_nginx_stats.stat.exists
+
+- name: define kube-apiserver for kubelet without kube-nginx but HA
+  set_fact:
+    kube_apiserver: "https://{{ hostvars[ groups['masters'][0] ].ansible_ssh_host }}:8443"
+  when: not kube_nginx_stats.stat.exists and  groups['masters'] | length  >=3
+
+- name: check if kubectl exists
+  stat:
+    path: /usr/bin/kubectl
+  register: kubectl_stats
+
+- name: generate kubelet kubeconfig on controller node
+  command:  "{{ item }}"
+  loop:
+    - 'kubectl config set-cluster kubernetes --certificate-authority=/opt/k8s/cert/ca.pem --embed-certs=true --server="{{ kube_apiserver }}" --kubeconfig=kubelet-bootstrap.kubeconfig'
+    - 'kubectl config set-credentials kubelet-bootstrap --token="{{ token }}" --kubeconfig=kubelet-bootstrap.kubeconfig'
+    - kubectl config set-context default --cluster=kubernetes --user=kubelet-bootstrap  --kubeconfig=kubelet-bootstrap.kubeconfig
+    - kubectl config use-context default --kubeconfig=kubelet-bootstrap.kubeconfig
+  args:
+    chdir: /opt/k8s/kubelet/cfg
+    #creates: /opt/k8s/kubelet/cfg/kubelet-bootstrap.kubeconfig 
+  when: kubectl_stats.stat.exists 
+  
+
+- name: generate kubelet kubeconfig on worker node
+  command:  "{{ item }}"
+  loop:
+    - 'kubectl config set-cluster kubernetes --certificate-authority=/opt/k8s/cert/ca.pem --embed-certs=true --server="{{ kube_apiserver }}" --kubeconfig=kubelet-bootstrap.kubeconfig'
+    - 'kubectl config set-credentials kubelet-bootstrap --token="{{ token }}" --kubeconfig=kubelet-bootstrap.kubeconfig'
+    - kubectl config set-context default --cluster=kubernetes --user=kubelet-bootstrap  --kubeconfig=kubelet-bootstrap.kubeconfig
+    - kubectl config use-context default --kubeconfig=kubelet-bootstrap.kubeconfig
+  args:
+    chdir: /opt/k8s/cfg
+  when: not kubectl_stats.stat.exists 
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: check if bootstrap exists
+  stat:
+    path: /opt/k8s/cfg/kubelet-bootstrap.kubeconfig
+  delegate_to: "{{ groups['masters'][0] }}"
+  register: bootstrap_stats
+
+- name: fetch kubelet-bootstrap.kubeconfig to ansible master
+  fetch:  
+    src: /opt/k8s/cfg/kubelet-bootstrap.kubeconfig
+    dest: /tmp/kubelet-bootstrap.kubeconfig
+    flat: yes
+  delegate_to: "{{ groups['masters'][0] }}"
+  when: bootstrap_stats.stat.exists
+
+- name: copy kubelet-bootstrap.kubeconfig on worker node
+  copy: 
+    src: /tmp/kubelet-bootstrap.kubeconfig
+    dest: /opt/k8s/kubelet/cfg/kubelet-bootstrap.kubeconfig
+  when: not kubectl_stats.stat.exists
+#- name: set service_cidr_prefix fact
+#  set_fact:
+#    service_cidr_prefix: "{{ service_cidr | regex_search('([0-9]{1,3}\\.){3}') }}"
+#
+#- name: debug cluster svc dns
+#  debug:
+#    var: service_cidr_prefix    
+#
+- name: generate kubelet-config
+  template: 
+    src: ../templates/kubelet-config.yaml.j2
+    dest: /opt/k8s/kubelet/cfg/kubelet-config.yaml
+
+- name: test if connect to internet
+  shell: ping -c 4 -q baidu.com >& /dev/null
+  ignore_errors: true
+  register: internet
+
+- name: copy pause tar to host
+  copy:
+    src: ../files/pause-amd64:3.1.tar
+    dest: /opt/k8s/kubelet/bin/pause-amd64:3.1.tar
+  when: internet.rc != 0
+
+- name: load pause image
+  shell: docker load -i /opt/k8s/kubelet/bin/pause-amd64:3.1.tar
+  when: internet.rc != 0
+
+- name: generate kubelet service
+  template:
+    src: ../templates/kubelet.service.j2
+    dest: /etc/systemd/system/kubelet.service
+  #notify:
+  #  - restart service
+
+- name: copy gran file
+  copy:
+    src: ../files/{{ item }}
+    dest: /opt/k8s/cfg/{{ item }}
+  loop:
+    - bootstrap.yaml
+    - grantapiserver.yaml
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: apply grant file
+  command: kubectl apply -f {{ item }}  
+  args:
+    chdir: /opt/k8s/cfg
+  loop:
+    - bootstrap.yaml
+    - grantapiserver.yaml 
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: copy csr file
+  copy:
+    src: ../files/csr-crb.yml
+    dest: /opt/k8s/kubelet/cfg/csr-crb.yml
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: grant authority for auto cert
+  shell: kubectl apply -f  /opt/k8s/kubelet/cfg/csr-crb.yml 
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"
+  #notify:
+  #  - restart kubelet
+
+#- include_tasks: restartservice.yml
+- include_tasks: ensurerunning.yml
+
+- name: approve server cert csr
+  shell: "{{ item }}"
+  loop:
+    - sleep 30
+    - kubectl get csr | grep Pending | awk '{print $1}' | xargs kubectl certificate approve && touch approve
+  args:
+    chdir: /opt/k8s/kubelet/cfg/
+    creates: /opt/k8s/kubelet/cfg/approve
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"
+

@@ -1,0 +1,79 @@
+- name: test if connect to internet
+  shell: ping -c 4 -q baidu.com >& /dev/null
+  ignore_errors: true
+  register: internet
+
+- name: add docker-ce repo
+  copy:
+    src: ../files/docker-ce.repo  
+    dest: /etc/yum.repos.d/docker-ce.repo
+  when: internet.rc == 0
+
+- name: install docker-ce
+  yum:
+    name: ['docker-ce-{{ version }}','docker-ce-cli-{{ version }}','containerd.io']
+    state: present
+  notify:
+    - restart docker
+
+- meta: flush_handlers
+
+- name: copy nvidia-docker repo
+  copy: 
+    src: ../files/nvidia-docker.repo
+    dest: /etc/yum.repos.d/nvidia-docker.repo
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['gpuservers'] }}"
+  when: "'gpuservers' in group_names"
+
+- name: install nvidia-docker2
+  yum:
+    name: nvidia-docker2
+    state: present
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['gpuservers'] }}"
+  notify:
+    - restart docker
+  when: "'gpuservers' in group_names"
+
+- meta: flush_handlers
+
+- name: copy daemon-nvidia-docker.json
+  copy: 
+    src: ../files/daemon-nvidia-docker.json
+    dest: /etc/docker/daemon.json
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['gpuservers'] }}"
+  when: "'gpuservers' in group_names"
+
+
+- name: copy daemon-nvidia-docker.json
+  copy: 
+    src: ../files/daemon-docker.json
+    dest: /etc/docker/daemon.json
+
+
+
+#- name: insert config to daemon.json
+#  blockinfile:
+#    path: /etc/docker/daemon.json
+#    block: |
+#      "insecure-registries": ["http://k8shub.com:1180"],
+#      "log-driver": "json-file",
+#      "log-opts": {
+#      "max-size": "10m",
+#      "max-file":"5"
+#      },
+#    insertafter: "^{"
+#    marker: "_comment":
+#  delegate_to: "{{ item }}"
+#  with_items: "{{ groups['gpuservers'] }}"
+
+#- name: copy docker.service file
+#  copy:
+#    src: ../files/docker.service
+#    dest: /etc/systemd/system/docker.service
+#  notify:
+#    - restart docker
+
+- include_tasks: ensurerunning.yml

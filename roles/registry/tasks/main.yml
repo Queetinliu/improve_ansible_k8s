@@ -1,0 +1,64 @@
+- name: copy registry yaml
+  copy:
+    src: ../files/registry.yaml
+    dest: /opt/registry.yaml
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"
+  
+- name: deploy registry pod
+  shell: kubectl apply -f /opt/registry.yaml
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: get clusterip of registry
+  shell: kubectl get svc | grep docker-registry |awk '{print $3}'
+  register: registry
+
+- name: delete hosts resolv if exists
+  lineinfile:
+    path: /etc/hosts
+    regexp: 'k8shub.com$'
+    state: absent
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['workers'] }}"
+
+- name: update hosts for registry
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ registry.stdout}} k8shub.com"
+    state: present
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['workers'] }}"
+  notify:
+    - restart docker
+
+- meta: flush_handlers
+
+- name: copy images tar file
+  copy:
+    src: ../files/images.tar.gz
+    dest: /opt/images.tar.gz
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: make images dir
+  file:
+    path: /opt/images
+    state: directory
+
+- name: untar images tar file
+  unarchive:
+    src: /opt/images.tar.gz
+    dest: /opt/images
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: load images
+  shell: for i in $(ls /opt/images/*.tar);do docker load -i $i;done
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: push images
+  shell: sleep 10s;for i in $(docker images|grep k8shub|awk '{print $1":"$2}');do docker push $i;done
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"

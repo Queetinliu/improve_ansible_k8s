@@ -1,0 +1,16 @@
+#- name: approve server cert csr
+#  shell: "{{ item }}"
+#  loop:
+#    - sleep 30
+#    - kubectl get csr | grep Pending | awk '{print $1}' | xargs kubectl certificate approve && touch approve
+#  args:
+#    chdir: /opt/k8s/kubelet/cfg/
+#    creates: /opt/k8s/kubelet/cfg/approve
+#  run_once: true
+#  delegate_to: "{{ groups['masters'][0] }}"
+
+- include_role:
+    name: coredns
+- include_role:
+    name: metrics-server
+

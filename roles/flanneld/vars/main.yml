@@ -1,0 +1,16 @@
+rolename: flanneld
+hosts_list: ''
+cn: flanneld
+orga: k8s
+flannel_etcd_prefix: /kubernetes/network
+#iface: enp3s0
+servicename: flanneld
+etcd_endpoints: '{% for item in groups["etcd"] %}
+{%- if not loop.last -%}
+https://{{ hostvars[item].ansible_ssh_host }}:2379,
+{%- else -%}
+https://{{ hostvars[item].ansible_ssh_host }}:2379
+{%- endif -%}
+{% endfor %}'
+healthzPort: 8471
+type: vxlan

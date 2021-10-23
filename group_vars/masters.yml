@@ -1,0 +1,3 @@
+k8s_dir: /opt/k8s/data
+service_cidr: 10.88.0.0/16
+service_cidr_prefix: "{{ service_cidr | regex_search('([0-9]{1,3}\\.){3}') }}"

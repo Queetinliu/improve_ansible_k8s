@@ -1,0 +1,3 @@
+cluster_dns_domain: cluster.local
+servicename: kubelet
+#token: 5774593de3382190223132e38d48a1e2

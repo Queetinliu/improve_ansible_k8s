@@ -1,0 +1,21 @@
+- name: make directory
+  file:
+    path: /opt/k8s/{{ item }}
+    state: directory
+  with_items:
+    - cert
+- name: copy ca cert
+  copy:
+    src: roles/cert/output/{{ item }}
+    dest: /opt/k8s/cert/{{ item }}
+  with_items:
+    - ca.pem
+    - ca-key.pem
+- include_role:
+    name: docker
+- include_role:
+    name: kubelet
+- include_role:
+    name: flanneld
+- include_role:
+    name: kube-proxy

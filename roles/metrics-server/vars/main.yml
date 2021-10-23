@@ -1,0 +1,5 @@
+rolename: proxy-client
+hostslist:  ''
+cn: aggregator
+orga: k8s
+imagefile: metric-server:0.5.0.tar

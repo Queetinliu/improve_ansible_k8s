@@ -1,0 +1,5 @@
+- name: reload library
+  shell: ldconfig
+
+- name: regenerate kernel
+  shell: dracut --force

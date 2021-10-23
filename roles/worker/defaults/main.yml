@@ -1,0 +1,1 @@
+kube_apiserver: "https://{{ hostvars[ groups['masters'][0] ].ansible_ssh_host }}:6443"

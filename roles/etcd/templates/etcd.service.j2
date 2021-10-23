@@ -1,0 +1,40 @@
+[Unit]
+Description=Etcd Server
+After=network.target
+After=network-online.target
+Wants=network-online.target
+Documentation=https://github.com/coreos
+
+[Service]
+Type=notify
+WorkingDirectory={{ etcd_datadir }}
+ExecStart=/opt/etcd/bin/etcd \
+  --data-dir={{ etcd_datadir }} \
+  --wal-dir={{ etcd_waldir }} \
+  --name={{ etcdname }} \
+  --cert-file=/opt/etcd/cert/etcd.pem \
+  --key-file=/opt/etcd/cert/etcd-key.pem \
+  --trusted-ca-file=/opt/etcd/cert/ca.pem \
+  --peer-cert-file=/opt/etcd/cert/etcd.pem \
+  --peer-key-file=/opt/etcd/cert/etcd-key.pem \
+  --peer-trusted-ca-file=/opt/etcd/cert/ca.pem \
+  --peer-client-cert-auth \
+  --client-cert-auth \
+  --listen-peer-urls=https://{{ nodeip }}:2380 \
+  --initial-advertise-peer-urls=https://{{ nodeip }}:2380 \
+  --listen-client-urls=https://{{ nodeip }}:2379,http://127.0.0.1:2379 \
+  --advertise-client-urls=https://{{ nodeip }}:2379 \
+  --initial-cluster-token=etcd-cluster-0 \
+  --initial-cluster={{ etcd_nodes }} \
+  --initial-cluster-state=new \
+  --auto-compaction-retention=1 \
+  --max-request-bytes=33554432 \
+  --quota-backend-bytes=6442450944 \
+  --heartbeat-interval=250 \
+  --election-timeout=2000
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

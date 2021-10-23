@@ -1,0 +1,7 @@
+rolename: kube-scheduler
+hosts_list:  '{% for item in groups["etcd"] %}
+"{{ hostvars[item].ansible_ssh_host }}",
+{% endfor %} "127.0.0.1"'
+cn: system:kube-scheduler
+orga: system:kube-scheduler
+servicename: kube-scheduler

@@ -1,0 +1,8 @@
+- include_tasks: roles/master/tasks/mastercommon.yml
+#- name: generate kube-scheduler service file
+#  template:
+#    src: templates/kube-scheduler.service.j2
+#    dest: /usr/lib/systemd/system/kube-scheduler.service
+#  notify:
+#    - restart {{ servicename }}
+#
