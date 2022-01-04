@@ -1,4 +1,17 @@
 ---
+- name: remove kernel tools
+  yum:
+    name: kernel-tools-3.10.0
+    state: absent
+
+- name: install new kernel
+  yum:
+    name: kernel-lt-4.4.138
+    state: present
+  async: 900
+  poll: 0 
+  register: newkernel
+
 - name: Set a hostname
   hostname: name={{ hostname }}
   tags: set hostname
@@ -6,7 +19,7 @@
 - name: update /etc/hosts file
   blockinfile:
     dest: /etc/hosts
-    content: "{{ lookup('template', '/root/ansible_k8s/roles/common/templates/hosts2.j2') }}"
+    content: "{{ lookup('template', 'templates/hosts2.j2') }}"
     state: present
   tags: modify hosts
 
@@ -30,17 +43,30 @@
     state: disabled
   tags: disable selinux
   
+#- name: modify sysctl
+#  get_url:
+#    url: "{{ httpurl }}/{{ ansible_role_name }}/kubernetes.conf"
+#    dest: /etc/sysctl.d/kubernetes.conf
+#
 - name: modify sysctl
   copy:
-    src: ../files/kubernetes.conf
+    src: files/kubernetes.conf
     dest: /etc/sysctl.d/kubernetes.conf
-  #notify:
-  #  - name: reboot machine
-  tags: modify sysctl
+#  #notify:
+#  #  - name: reboot machine
+#  tags: modify sysctl
 
 - name: set timezone
   timezone:
     name: Asia/Shanghai
+
+- name: get task status of newkernel
+  async_status:
+    jid: "{{ newkernel.ansible_job_id }}"
+  register: result
+  until: result.finished
+  delay: 5
+  retries: 30
 
 - name: install chrony
   yum:
@@ -53,16 +79,6 @@
     dest: /etc/chrony.conf
   notify:
     - restart chronyd
-
-- name: remove kernel tools
-  yum:
-    name: kernel-tools-3.10.0
-    state: absent
-
-- name: install new kernel
-  yum:
-    name: kernel-lt-4.4.138
-    state: present
 
 - name: set to new kernel
   shell: grub2-set-default 0

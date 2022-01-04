@@ -1,6 +1,8 @@
-- name: create directory
+- include_tasks: setuphttpserver.yml
+
+- name: create etcd directories
   file:
-    path: /opt/etcd/{{ item }}
+    path: "{{ etcd.etcd_workingdir }}/{{ item }}"
     state: directory
   with_items:
     - bin
@@ -8,9 +10,11 @@
     - data
     - wal
 - name: copy etcdctl bin
-  copy:
-    src: roles/etcd/files/{{ item }}
-    dest: /opt/etcd/bin/{{ item }}
+  get_url:
+    url: "{{ httpurl }}/{{ ansible_role_name }}/{{ item }}"
+  #copy:
+  #  src: roles/etcd/files/{{ item }}
+    dest: "{{ etcd.etcd_workingdir }}/bin/{{ item }}"
     mode: '0755'
   with_items:
     - etcd
@@ -18,16 +22,16 @@
 - name: copy cert file
   copy:
     src: roles/cert/output/{{ item }}
-    dest: /opt/etcd/cert/{{ item }}
+    dest: "{{ etcd.etcd_workingdir }}/cert/{{ item }}"
   with_items:
-    - "{{ rolename }}.pem"
-    - "{{ rolename }}-key.pem"
+    - "{{ etcd.rolename }}.pem"
+    - "{{ etcd.rolename }}-key.pem"
     - ca.pem
 - name: generate etcd service
   template:
-    src: roles/etcd/templates/etcd.service.j2
+    src: etcd.service.j2
     dest: /etc/systemd/system/etcd.service
-  #notify:
-  #  - restart service
-#- include_tasks: restartservice.yml
+
 - include_tasks: ensurerunning.yml
+  vars:
+    servicename: "{{ etcd.servicename }}"

@@ -1,6 +1,8 @@
+- include_tasks: setuphttpserver.yml
+
 - name: copy cfssl 
-  copy:
-    src: ../files/{{ item }}
+  get_url:
+    url: "{{ httpurl }}/{{ ansible_role_name}}/{{ item }}"
     dest: /usr/local/bin/{{ item }}
     mode: '0755'
   with_items:
@@ -13,47 +15,34 @@
     path: roles/cert/output
     state: directory
 
+- name: copy ca config to output
+  get_url:
+    url: "{{ httpurl }}/{{ ansible_role_name }}/{{ item }}"
+  #copy:
+   # src: "{{ item }}"
+    dest: roles/cert/output/{{ item }}
+  with_items:
+    - ca-config.json
+    - ca-csr.json  
+
 - name: generate ca 
   shell: cfssl gencert -initca ca-csr.json | cfssljson -bare ca 
   args:
     chdir: roles/cert/output/
+    creates: ca.pem    
 
-- name: import kubectl vars
-  include_vars:
-    dir: ../../kubectl/vars/
-- include_tasks: roles/cert/tasks/certcommon.yml
+- include_tasks: certcommon.yml
+  vars:
+    cn: "{{ item.cn }}"
+    hosts_list: "{{ item.hosts_list }}"
+    orga: "{{ item.orga }}"
+    rolename: "{{ item.rolename }}"
+  with_items:
+    - "{{ kubectl }}" 
+    - "{{ etcd }}"
+    - "{{ kube_apiserver }}"
+    - "{{ metrics_server }}"
+    - "{{ kube_controller_manager }}"
+    - "{{ kube_scheduler }}"
+    - "{{ kube_proxy }}"
 
-- name: import etcd vars
-  include_vars:
-    dir: ../../etcd/vars/
-- include_tasks: roles/cert/tasks/certcommon.yml
-
-- name: import kubernetes vars
-  include_vars:
-    dir: ../../kube-apiserver/vars/
-- include_tasks: roles/cert/tasks/certcommon.yml
-
-- name: import proxy-client vars
-  include_vars:
-    dir: ../../metrics-server/vars/
-- include_tasks: roles/cert/tasks/certcommon.yml
-
-- name: import kube-controller-manager vars
-  include_vars:
-    dir: ../../kube-controller-manager/vars/
-- include_tasks: roles/cert/tasks/certcommon.yml
-
-- name: import kube-scheduler vars
-  include_vars:
-    dir: ../../kube-scheduler/vars/
-- include_tasks: roles/cert/tasks/certcommon.yml
-
-- name: import flanneld vars
-  include_vars:
-    dir: ../../flanneld/vars/
-- include_tasks: roles/cert/tasks/certcommon.yml
-
-- name: import kube-proxy vars
-  include_vars:
-    dir: ../../kube-proxy/vars/
-- include_tasks: roles/cert/tasks/certcommon.yml

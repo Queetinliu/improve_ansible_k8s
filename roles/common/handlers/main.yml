@@ -1,22 +1,6 @@
-- include_vars:
-    file: "{{ item }}"
-    loop:
-      - roles/kube-apiserver/vars/main.yml
-      - roles/kube-controller-manager/vars/main.yml
-      - roles/kube-scheduler/vars/main.yml
-
-- name: reboot machine
-  reboot:
 - name: restart chronyd
   systemd:
     daemon_reload: yes
     name: chronyd
     enabled: yes
     state: restarted
-- name: restart service
-  systemd:
-    daemon_reload: yes
-    name: "{{ servicename }}"
-    state: restarted
-    enabled: yes
-  listen: restart service

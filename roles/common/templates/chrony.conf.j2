@@ -4,7 +4,7 @@
 #server 1.centos.pool.ntp.org iburst
 #server 2.centos.pool.ntp.org iburst
 #server 3.centos.pool.ntp.org iburst
-server {{ hostvars[groups['masters'][0]].ansible_ssh_host }} iburst
+server {{ hostvars[groups['masters'][0]].ansible_host }} iburst
 # Record the rate at which the system clock gains/losses time.
 driftfile /var/lib/chrony/drift
 
@@ -25,7 +25,7 @@ rtcsync
 # Allow NTP client access from local network.
 #allow 192.168.0.0/16
 {% for item in groups["etcd"] %}
-allow  {{  hostvars[item].ansible_ssh_host  }}   
+allow  {{  hostvars[item].ansible_host  }}   
 {% endfor %}
 
 # Serve time even if not synchronized to a time source.

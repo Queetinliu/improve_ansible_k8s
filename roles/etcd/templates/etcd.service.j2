@@ -7,25 +7,25 @@ Documentation=https://github.com/coreos
 
 [Service]
 Type=notify
-WorkingDirectory={{ etcd_datadir }}
-ExecStart=/opt/etcd/bin/etcd \
-  --data-dir={{ etcd_datadir }} \
-  --wal-dir={{ etcd_waldir }} \
-  --name={{ etcdname }} \
-  --cert-file=/opt/etcd/cert/etcd.pem \
-  --key-file=/opt/etcd/cert/etcd-key.pem \
-  --trusted-ca-file=/opt/etcd/cert/ca.pem \
-  --peer-cert-file=/opt/etcd/cert/etcd.pem \
-  --peer-key-file=/opt/etcd/cert/etcd-key.pem \
-  --peer-trusted-ca-file=/opt/etcd/cert/ca.pem \
+WorkingDirectory={{ etcd.etcd_workingdir }}/data/
+ExecStart={{ etcd.etcd_workingdir }}/bin/etcd \
+  --data-dir={{ etcd.etcd_workingdir }}/data/ \
+  --wal-dir={{ etcd.etcd_workingdir }}/wal \
+  --name={{ etcd_member_name }} \
+  --cert-file={{ etcd.etcd_workingdir }}/cert/etcd.pem \
+  --key-file={{ etcd.etcd_workingdir }}/cert/etcd-key.pem \
+  --trusted-ca-file={{ etcd.etcd_workingdir }}/cert/ca.pem \
+  --peer-cert-file={{ etcd.etcd_workingdir }}/cert/etcd.pem \
+  --peer-key-file={{ etcd.etcd_workingdir }}/cert/etcd-key.pem \
+  --peer-trusted-ca-file={{ etcd.etcd_workingdir }}/cert/ca.pem \
   --peer-client-cert-auth \
   --client-cert-auth \
-  --listen-peer-urls=https://{{ nodeip }}:2380 \
-  --initial-advertise-peer-urls=https://{{ nodeip }}:2380 \
-  --listen-client-urls=https://{{ nodeip }}:2379,http://127.0.0.1:2379 \
-  --advertise-client-urls=https://{{ nodeip }}:2379 \
+  --listen-peer-urls=https://{{ nodeip|default(ansible_host) }}:2380 \
+  --initial-advertise-peer-urls=https://{{ nodeip|default(ansible_host) }}:2380 \
+  --listen-client-urls=https://{{ nodeip|default(ansible_host) }}:2379,http://127.0.0.1:2379 \
+  --advertise-client-urls=https://{{ nodeip|default(ansible_host) }}:2379 \
   --initial-cluster-token=etcd-cluster-0 \
-  --initial-cluster={{ etcd_nodes }} \
+  --initial-cluster={{ etcd.etcd_nodes }} \
   --initial-cluster-state=new \
   --auto-compaction-retention=1 \
   --max-request-bytes=33554432 \

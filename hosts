@@ -14,66 +14,43 @@
 ## blue.example.com
 ## 192.168.100.1
 ## 192.168.100.10
+#如果不是使用默认的ip绑定服务，请通过nodeip指定服务绑定的ip,请etcd集群使用的名字
+[all]
+master01 ansible_host=192.168.56.30 hostname=master01 etcd_member_name=etcd01 #nodeip=1.1.1.1
+master02 ansible_host=192.168.56.31 hostname=master02 etcd_member_name=etcd02 #nodeip=1.1.1.1
+master03 ansible_host=192.168.56.32 hostname=master03 etcd_member_name=etcd03 #nodeip=1.1.1.1
 
-httprepo ansible_ssh_host=192.168.56.26
-master01 ansible_ssh_host=192.168.56.26 hostname=master01 nodeip=192.168.56.26 iface=enp0s8 flanneld_ip=192.168.56.26
-worker01 ansible_ssh_host=192.168.56.27 hostname=worker01 nodeip=192.168.56.27 iface=enp0s8 flanneld_ip=192.168.56.27
-etcd01 ansible_ssh_host=192.168.56.26   nodeip=192.168.56.26
-
-weedmaster01 ansible_ssh_host=192.168.56.26
-weedvolume01 ansible_ssh_host=192.168.56.27
-weedfiler01 ansible_ssh_host=192.168.56.26
 # Ex 2: A collection of hosts belonging to the 'webservers' group
 [masters]
 master01
+master02
+master03
 
 [etcd]
-etcd01
+master01
+master02
+master03
 
 [workers]
 master01
-worker01
+master02
+master03
 
 #[gpuservers]
 #master01
 #master02
 #master03
 
-[weedmasters]
-weedmaster01
-
-[weedvolumes]
-weedvolume01
-
-[weedfilers]
-weedfiler01
-
-[weedservers:children]
-weedmasters
-weedvolumes
-weedfilers
-## [webservers]
-## alpha.example.org
-## beta.example.org
-## 192.168.1.100
-## 192.168.1.110
-
-# If you have multiple hosts following a pattern you can specify
-# them like this:
-
-## www[001:006].example.com
-
-# Ex 3: A collection of database servers in the 'dbservers' group
-
-## [dbservers]
-## 
-## db01.intranet.mydomain.net
-## db02.intranet.mydomain.net
-## 10.25.1.56
-## 10.25.1.57
-
-# Here's another example of host ranges, this time there are no
-# leading 0s:
-
-## db-[99:101]-node.example.com
-
+#[weedmasters]
+#master01
+#
+#[weedvolumes]
+#worker01
+#
+#[weedfilers]
+#master01
+#
+#[weedservers:children]
+#weedmasters
+#weedvolumes
+#weedfilers
