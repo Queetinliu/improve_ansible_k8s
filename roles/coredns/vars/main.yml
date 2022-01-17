@@ -1,2 +1,0 @@
-cluster_dns_domain: cluster.local
-imagefile: coredns:1.8.4.tar

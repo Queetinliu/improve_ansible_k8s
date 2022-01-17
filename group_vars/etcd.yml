@@ -1,3 +1,0 @@
-etcd_datadir : /opt/etcd/data
-etcd_waldir: /opt/etcd/wal
-servicename: etcd

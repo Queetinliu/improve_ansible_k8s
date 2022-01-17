@@ -1,8 +1,0 @@
-- name: restart docker
-  systemd:
-    name: docker
-    enabled: yes
-    state: restarted
-    daemon-reload: yes
-  delegate_to: "{{ item }}"
-  with_items: "{{ groups['workers'] }}"

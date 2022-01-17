@@ -1,7 +1,0 @@
-rolename: kube-controller-manager
-hosts_list:  '{% for item in groups["etcd"] %}
-"{{ hostvars[item].ansible_ssh_host }}",
-{% endfor %} "127.0.0.1"'
-cn: system:kube-controller-manager
-orga: system:kube-controller-manager
-servicename: kube-controller-manager

@@ -1,7 +1,0 @@
-- name: mkdir weedmaster dir
-  file:
-    path: "{{ weedmasterdir }}"
-    state: directory
-
-- include_role: 
-    name: seaweedfs

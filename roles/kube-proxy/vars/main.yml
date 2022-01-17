@@ -1,5 +1,0 @@
-rolename: kube-proxy
-cn: system:kube-proxy
-hosts_list: ''
-orga: k8s
-servicename: kube-proxy
