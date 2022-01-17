@@ -1,0 +1,9 @@
+- hosts: all
+  gather_facts: false
+  tasks:
+  - include_tasks: test2.yml
+    vars:
+      rolename: "{{ item.rolename }}"
+    with_items:
+      - "{{ kubectl }}"
+  

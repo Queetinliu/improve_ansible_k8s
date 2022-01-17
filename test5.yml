@@ -1,0 +1,12 @@
+- hosts: master01
+  gather_facts: false
+  tasks:
+  - name: sync file
+    synchronize:
+      src: "{{ item }}"
+      dest: "tmp/cert"
+    async: 300
+    poll: 0
+    with_fileglob:
+      - "roles/cert/output/{{ kubectl.rolename }}*.pem"
+

@@ -1,0 +1,33 @@
+- hosts: master01
+  gather_facts: false
+  tasks:
+  - name: install nfs-utils on all workers
+    yum:
+      name: nfs-utils
+      state: present
+    async: 120
+    poll: 0
+    register: nfsinstall
+    delegate_to: "{{ item }}"
+    with_items: "{{ groups['workers'] }}"
+
+
+  - name: get task status of nfsinstall 
+    async_status:
+      jid: "{{ nfsinstall.results[item].ansible_job_id }}"
+    register: result
+    until: result.finished
+    delay: 2
+    retries: 50
+    with_items: "{{ range(groups['workers']|length)|list }}"
+    delegate_to: "{{ groups['workers'][item] }}"
+
+
+  #- name: get task status of test
+  #  async_status:
+  #    jid: "{{ copy.ansible_job_id }}"
+  #  register: result
+  #  until: result.finished
+  #  delay: 1
+  #  retries: 30
+

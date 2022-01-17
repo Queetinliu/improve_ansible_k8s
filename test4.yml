@@ -1,0 +1,6 @@
+- hosts: master01
+  gather_facts: false
+  tasks:
+  - name: debug
+    debug:
+      msg: "{{ apiserver | default('http://'+ansible_host) }}"

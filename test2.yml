@@ -1,0 +1,26 @@
+- hosts: master02
+  gather_facts: false
+  tasks:
+  - name: compile nginx
+    shell: ./configure --with-stream --without-http --prefix="{{ k8s_dir }}/kube-nginx/nginx-prefix" --without-http_uwsgi_module --without-http_scgi_module --without-http_fastcgi_module && make && make install
+    async: 600
+    poll: 0
+    register: nginx
+    args:
+      chdir: "{{ k8s_dir }}/kube-nginx/nginx-1.15.3"
+      creates: "{{ k8s_dir }}/kube-nginx/nginx-prefix/sbin/nginx"
+
+
+  - name: debug
+    debug:
+      msg: "{{ nginx }}"  
+ 
+  
+#  - name: get task status of newkernel
+#    async_status:
+#      jid: "{{ .ansible_job_id }}"
+#  register: result
+#  until: result.finished
+#  delay: 5
+#  retries: 30
+
