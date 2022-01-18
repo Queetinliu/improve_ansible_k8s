@@ -21,13 +21,19 @@
   tasks:
   - name: mkdir weedmaster dir
     file:
-      path: "{{ weedmasterdir }}"
+      path: "{{ item }}"
       state: directory
+    with_items:
+      - "{{ weedmasterdir1 }}"
+      - "{{ weedmasterdir2 }}"
     
   - name: generate weedmaster service
     template:
-      src: templates/weedmaster.service.j2
-      dest: /etc/systemd/system/weedmaster.service
+      src: "templates/{{item}}.service.j2"
+      dest: "/etc/systemd/system/{{item}}.service"
+    with_items:
+      - weedmaster1
+      - weedmaster2
     notify:
       - start weedmaster
 
@@ -35,22 +41,32 @@
     - name: start weedmaster
       systemd:
         daemon-reload: yes
-        name: weedmaster
+        name: "{{ item }}"
         state: started
         enabled: yes
+      with_items:
+        - weedmaster1
+        - weedmaster2
 
 - hosts: weedvolumes
   gather_facts: false
   tasks:
   - name: mkdir weedvolume dir
     file:
-      path: "{{ weedvolumedir }}"
+      path: "{{ item }}"
       state: directory
+    with_items:
+      - "{{ weedvolumedir1 }}"
+      - "{{ weedvolumedir2 }}"
+
   
   - name: generate weedvolume service
     template:
-      src: templates/weedvolume.service.j2
-      dest: /etc/systemd/system/weedvolume.service
+      src: "templates/{{item}}.service.j2"
+      dest: "/etc/systemd/system/{{item}}.service"
+    with_items:
+      - weedvolume1
+      - weedvolume2
     notify:
       - start weedvolume
 
@@ -58,9 +74,12 @@
     - name: start weedvolume
       systemd:
         daemon-reload: yes
-        name: weedvolume
+        name: "{{ item }}"
         state: started
         enabled: yes
+      with_items:
+        - weedvolume1
+        - weedvolume2
 
 - hosts: weedfilers
   gather_facts: false

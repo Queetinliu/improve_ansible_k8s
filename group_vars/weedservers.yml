@@ -1,8 +1,15 @@
-weedmasterslist: '{% for item in groups["weedmasters"] %}
+weedmasterslist1: '{% for item in groups["weedmasters"] %}
 {%- if not loop.last -%}
-{{ hostvars[item].masterip }}:{{ hostvars[item].weedmasterport }},
+{{ hostvars[item].masterip }}:{{ hostvars[item].weedmasterport1 }},
 {%- else -%}
-{{ hostvars[item].masterip }}:{{ hostvars[item].weedmasterport }}
+{{ hostvars[item].masterip }}:{{ hostvars[item].weedmasterport1 }}
+{%- endif -%}
+{% endfor %}'
+weedmasterslist2: '{% for item in groups["weedmasters"] %}
+{%- if not loop.last -%}
+{{ hostvars[item].masterip }}:{{ hostvars[item].weedmasterport2 }},
+{%- else -%}
+{{ hostvars[item].masterip }}:{{ hostvars[item].weedmasterport2 }}
 {%- endif -%}
 {% endfor %}'
 weedfilerslist: '{% for item in groups["weedfilers"] %}

@@ -1,20 +1,33 @@
 masterip: "{{ ansible_host }}"
-weedmasterdir: /weedmaster
-weedmasterport: 9333
+weedmasterdir1: /weedmaster1
+weedmasterdir2: /weedmaster2
+weedmasterport1: 9333
+weedmasterport2: 9334
 weedreplication: 001
-weedmasterpeers: '{% for item in groups["weedmasters"] %}
+weedmasterpeers1: '{% for item in groups["weedmasters"] %}
 {%- if hostvars[item].ansible_host != masterip -%}
 {%- if not loop.last -%}
-{{ hostvars[item].ansible_host }}:{{ hostvars[item].weedmasterport }},
+{{ hostvars[item].ansible_host }}:{{ hostvars[item].weedmasterport1 }},
 {%- else -%}
-{{ hostvars[item].ansible_host }}:{{ hostvars[item].weedmasterport }}
+{{ hostvars[item].ansible_host }}:{{ hostvars[item].weedmasterport1 }}
 {%- endif -%}
 {%- endif -%}
 {% endfor %}'
-
+weedmasterpeers2: '{% for item in groups["weedmasters"] %}
+{%- if hostvars[item].ansible_host != masterip -%}
+{%- if not loop.last -%}
+{{ hostvars[item].ansible_host }}:{{ hostvars[item].weedmasterport2 }},
+{%- else -%}
+{{ hostvars[item].ansible_host }}:{{ hostvars[item].weedmasterport2 }}
+{%- endif -%}
+{%- endif -%}
+{% endfor %}'
 loglevel: 2
-weedvolumedir: /weeddata
+weedvolumedir1: /weeddata1
+weedvolumedir2: /weeddata2
 weedvolumeip: "{{ ansible_host }}"
 weedvolumemax: 500
-weedvolumeport: 8082
-masterserver: "{{ ansible_host }}:{{ weedmasterport }}"
+weedvolumeport1: 8081
+weedvolumeport2: 8082
+masterserver1: "{{ ansible_host}}:{{ weedmasterport1 }}"
+masterserver2: "{{ ansible_host}}:{{ weedmasterport2 }}"

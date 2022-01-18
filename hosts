@@ -54,6 +54,7 @@ weedmaster03
 
 [weedfilers]
 weedmaster01
+weedmaster03
 
 [weedservers:children]
 weedmasters
