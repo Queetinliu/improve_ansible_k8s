@@ -8,7 +8,7 @@ User=root
 Group=root
 
 ExecStart=/usr/local/bin/weed -v={{ loglevel }} filer  -ip={{ filerip }}  -master={{ weedmasterslist }} -port={{ filerport }} 
-WorkingDirectory=/opt/weed
+WorkingDirectory=/opt
 SyslogIdentifier=seaweedfs-filer
 
 [Install]
