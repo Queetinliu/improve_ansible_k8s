@@ -1,4 +1,4 @@
-- hosts: weedmasters
+- hosts: all
   gather_facts: false
   tasks:
   - name: stop & disable firewalld

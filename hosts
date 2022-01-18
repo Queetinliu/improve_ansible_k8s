@@ -21,20 +21,20 @@ weedmaster02 ansible_host=192.168.56.3 hostname=master02 etcd_member_name=etcd02
 weedmaster03 ansible_host=192.168.56.4 hostname=master03 etcd_member_name=etcd03 #nodeip=1.1.1.1
 
 # Ex 2: A collection of hosts belonging to the 'webservers' group
-[masters]
-master01
-master02
-master03
-
-[etcd]
-master01
-master02
-master03
-
-[workers]
-master01
-master02
-master03
+#[masters]
+#master01
+#master02
+#master03
+#
+#[etcd]
+#master01
+#master02
+#master03
+#
+#[workers]
+#master01
+#master02
+#master03
 
 #[gpuservers]
 #master01

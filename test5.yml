@@ -3,4 +3,4 @@
   tasks:
   - name: debug
     debug:
-      msg: "{{ masterip }}"
+      msg: "{{ weedmasterpeers }}"
