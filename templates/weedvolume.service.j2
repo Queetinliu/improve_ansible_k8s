@@ -7,7 +7,7 @@ Type=simple
 User=root
 Group=root
 
-ExecStart=/usr/local/bin/weed volume -dir={{ volumedir }} -ip={{ volumeip }} -max={{ volumemax }} -mserver={{ weedmasterslist }} -port={{ volumeport }}
+ExecStart=/usr/local/bin/weed -v={{ loglevel }} volume -dir={{ weedvolumedir }} -ip={{ weedvolumeip }} -max={{ weedvolumemax }} -mserver={{ masterserver }} -port={{ weedvolumeport }}
 WorkingDirectory=/opt/weed
 SyslogIdentifier=seaweedfs-volume
 

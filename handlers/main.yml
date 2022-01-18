@@ -1,0 +1,20 @@
+- name: start weedmaster
+  systemd:
+    daemon-reload: yes
+    name: weedmaster
+    state: started
+    enabled: yes
+
+- name: start weedvolume
+  systemd:
+    daemon-reload: yes
+    name: weedvolume
+    state: started
+    enabled: yes
+
+- name: start weedfiler 
+  systemd:
+    daemon-reload: yes
+    name: weedfiler
+    state: started
+    enabled: yes

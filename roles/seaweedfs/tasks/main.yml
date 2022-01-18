@@ -9,24 +9,54 @@
     state: directory
   delegate_to: "{{ item }}"
   with_items: 
-    - { path: {{ weedmasterdir }},groups: {{ groups['weedmasters'] }} }
-    - { path: {{ weedvolumedir }},groups: {{ groups['weedvolumes'] }} }
+    - "{{ groups['weedmasters'] }}" 
 
+- name: mkdir weedvolume dir
+  file:
+    path: "{{ weedvolumedir }}"
+    state: directory
+  delegate_to: "{{ item }}"
+  with_items: 
+    - "{{ groups['weedvolumes'] }}" 
 
 - name: copy weed binary
   copy:
-    src: files/weed
+    src: "files/{{ ansible_role_name }}/weed"
     dest: /usr/local/bin/weed
     mode: '0755'
 
-- name: generate  service
+- name: generate weedmaster service
   template:
-    src: templates/{{ item }}.service.j2
-    dest: /etc/systemd/system/{{ item }}.service 
+    src: templates/weedmaster.service.j2
+    dest: /etc/systemd/system/weedmaster.service 
+  delegate_to: "{{ item }}"
   with_items:
-    - weedmaster
-    - weedvolume
-    - weedfiler
+    - "{{ groups['weedmasters'] }}"
+  notify:
+    - start weedmaster
 
-- include_tasks: ensurerunning.yml
+- meta: flush_handlers
+
+- name: generate weedvolume service
+  template:
+    src: templates/weedvolume.service.j2
+    dest: /etc/systemd/system/weedvolume.service 
+  delegate_to: "{{ item }}"
+  with_items:
+    - "{{ groups['weedvolumes'] }}"
+  notify:
+    - start weedvolume
+
+- meta: flush_handlers
+
+- name: generate weedfiler service
+  template:
+    src: templates/weedfiler.service.j2
+    dest: /etc/systemd/system/weedfiler.service 
+  delegate_to: "{{ item }}"
+  run_once: true
+  with_items:
+    - "{{ groups['weedfilers'] }}"
+  notify:
+    - start weedfiler
 

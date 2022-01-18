@@ -1,4 +1,13 @@
-masterip: 192.168.56.8
+masterip: 192.168.56.2
 weedmasterdir: /weedmaster
 weedmasterport: 9333
-weedreplication: 000
+weedreplication: 001
+weedmasterpeers: 192.168.56.3:9333,192.168.56.4:9333
+loglevel: 2
+weedvolumedir: /weeddata
+weedvolumeip: 192.168.56.2
+weedvolumemax: 500
+weedvolumeport: 8081
+masterserver: 192.168.56.2:9333
+filerip: 192.168.56.2
+filerport: 8888

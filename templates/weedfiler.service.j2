@@ -7,7 +7,7 @@ Type=simple
 User=root
 Group=root
 
-ExecStart=/usr/local/bin/weed filer  -ip={{ filerip }}  -master={{ weedmasterslist }} -port={{ filerport }} -peers={{ weedfilerslist }}
+ExecStart=/usr/local/bin/weed -v={{ loglevel }} filer  -ip={{ filerip }}  -master={{ weedmasterslist }} -port={{ filerport }} 
 WorkingDirectory=/opt/weed
 SyslogIdentifier=seaweedfs-filer
 

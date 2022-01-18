@@ -1,14 +1,82 @@
 - hosts: weedmasters
   gather_facts: false
-  roles:
-    - weedmaster
+  tasks:
+  - name: stop & disable firewalld
+    systemd:
+      name: firewalld
+      state: stopped
+      enabled: no
+  - name: copy weed binary
+    copy:
+      src: "files/weed"
+      dest: /usr/local/bin/weed
+      mode: '0755'
+  - name: mkdir work dir
+    file:
+      path: /opt/weed
+      state: directory
+
+- hosts: weedmasters
+  gather_facts: false
+  tasks:
+  - name: mkdir weedmaster dir
+    file:
+      path: "{{ weedmasterdir }}"
+      state: directory
+    
+  - name: generate weedmaster service
+    template:
+      src: templates/weedmaster.service.j2
+      dest: /etc/systemd/system/weedmaster.service
+    notify:
+      - start weedmaster
+
+  handlers:
+    - name: start weedmaster
+      systemd:
+        daemon-reload: yes
+        name: weedmaster
+        state: started
+        enabled: yes
 
 - hosts: weedvolumes
   gather_facts: false
-  roles:
-    - weedvolume
+  tasks:
+  - name: mkdir weedvolume dir
+    file:
+      path: "{{ weedvolumedir }}"
+      state: directory
+  
+  - name: generate weedvolume service
+    template:
+      src: templates/weedvolume.service.j2
+      dest: /etc/systemd/system/weedvolume.service
+    notify:
+      - start weedvolume
+
+  handlers:
+    - name: start weedvolume
+      systemd:
+        daemon-reload: yes
+        name: weedvolume
+        state: started
+        enabled: yes
 
 - hosts: weedfilers
   gather_facts: false
-  roles:
-    - weedfiler
+  tasks:
+  - name: generate weedfiler service
+    template:
+      src: templates/weedfiler.service.j2
+      dest: /etc/systemd/system/weedfiler.service
+    notify:
+      - start weedfiler
+
+
+  handlers:
+    - name: start weedfiler 
+      systemd:
+        daemon-reload: yes
+        name: weedfiler
+        state: started
+        enabled: yes

@@ -1,4 +1,5 @@
 volumedir: /weeddata
-volumeip: 192.168.1.30
-volumemax: 5
+volumeip: 192.168.56.3
+volumemax: 500
 volumeport: 8082
+masterserver: 192.168.56.3:9333
