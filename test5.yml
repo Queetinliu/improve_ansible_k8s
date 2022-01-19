@@ -3,4 +3,4 @@
   tasks:
   - name: debug
     debug:
-      msg: "{{ weedmasterpeers }}"
+      msg: "{{ weedmasterpeers2[:-1] }}"

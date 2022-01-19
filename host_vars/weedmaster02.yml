@@ -6,20 +6,12 @@ weedmasterport2: 9334
 weedreplication: 001
 weedmasterpeers1: '{% for item in groups["weedmasters"] %}
 {%- if hostvars[item].ansible_host != masterip -%}
-{%- if not loop.last -%}
 {{ hostvars[item].ansible_host }}:{{ hostvars[item].weedmasterport1 }},
-{%- else -%}
-{{ hostvars[item].ansible_host }}:{{ hostvars[item].weedmasterport1 }}
-{%- endif -%}
 {%- endif -%}
 {% endfor %}'
 weedmasterpeers2: '{% for item in groups["weedmasters"] %}
 {%- if hostvars[item].ansible_host != masterip -%}
-{%- if not loop.last -%}
 {{ hostvars[item].ansible_host }}:{{ hostvars[item].weedmasterport2 }},
-{%- else -%}
-{{ hostvars[item].ansible_host }}:{{ hostvars[item].weedmasterport2 }}
-{%- endif -%}
 {%- endif -%}
 {% endfor %}'
 loglevel: 2

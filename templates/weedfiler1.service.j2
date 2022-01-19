@@ -1,6 +1,7 @@
 [Unit]
 Description=SeaweedFS volume
-After=network.target weedmaster.target weedvolume.target
+Requires=network.target weedmaster1.service weedvolume1.service
+After=network.target weedmaster1.service weedvolume1.service
 
 [Service]
 Type=simple

@@ -7,7 +7,7 @@ Type=simple
 User=root
 Group=root
 
-ExecStart=/usr/local/bin/weed  -v={{ loglevel }} master -ip={{ masterip }} -mdir={{ weedmasterdir1 }} -port={{ weedmasterport1 }} -peers={{ weedmasterpeers1 }} -defaultReplication={{ weedreplication }}
+ExecStart=/usr/local/bin/weed  -v={{ loglevel }} master -ip={{ masterip }} -mdir={{ weedmasterdir1 }} -port={{ weedmasterport1 }} -peers={{ weedmasterpeers1[:-1] }} -defaultReplication={{ weedreplication }}
 WorkingDirectory=/opt
 SyslogIdentifier=seaweedfs-master
 
